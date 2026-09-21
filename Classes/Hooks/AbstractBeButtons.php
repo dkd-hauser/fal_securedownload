@@ -66,10 +66,14 @@ abstract class AbstractBeButtons
             return $buttons;
         }
 
-        // In some folder copy/move actions in file list an invalid id is passed
+        // In some folder copy/move actions in file list an invalid id is passed.
+        // \RuntimeException is caught as well because ResourceFactory throws a plain one
+        // (1381570997 "A file needs to reside in a Storage") when the storage behind a
+        // record cannot be resolved - a doc header button must never take the whole
+        // module down over an unresolvable identifier.
         try {
             $folder = $this->resourceFactory->retrieveFileOrFolderObject($combinedIdentifier);
-        } catch (ResourceDoesNotExistException|InsufficientFolderAccessPermissionsException) {
+        } catch (ResourceDoesNotExistException|InsufficientFolderAccessPermissionsException|\RuntimeException) {
             $folder = null;
         }
 

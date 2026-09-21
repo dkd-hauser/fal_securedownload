@@ -29,11 +29,13 @@ namespace BeechIt\FalSecuredownload\EventListener;
 
 use BeechIt\FalSecuredownload\Hooks\AbstractBeButtons;
 use Psr\Http\Message\UriInterface;
+use TYPO3\CMS\Backend\Module\ModuleInterface;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\ComponentFactory;
 use TYPO3\CMS\Backend\Template\Components\ModifyButtonBarEvent;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Utility\MathUtility;
 
 /**
  * Adds the FolderPermission button to the doc header of the file list
@@ -44,6 +46,13 @@ use TYPO3\CMS\Core\Resource\ResourceFactory;
  */
 class ModifyButtonBarEventListener extends AbstractBeButtons
 {
+    /**
+     * Module the button belongs to. EXT:filelist registers the file list under this
+     * identifier since v13; the former name file_FilelistList is kept as an alias by
+     * the core, so requests through the old name resolve to this identifier as well.
+     */
+    private const FILE_LIST_MODULE = 'media_management';
+
     public function __construct(
         ?ResourceFactory $resourceFactory,
         private readonly ComponentFactory $componentFactory
@@ -53,13 +62,39 @@ class ModifyButtonBarEventListener extends AbstractBeButtons
 
     public function __invoke(ModifyButtonBarEvent $event): void
     {
-        $identifier = $event->getRequest()->getQueryParams()['id'] ?? null;
-        if ($identifier === null) {
+        $request = $event->getRequest();
+
+        // ModifyButtonBarEvent is dispatched in EVERY backend module, but this button
+        // only ever belongs into the file list. Without the guard the listener picks up
+        // the "id" parameter of page based modules - where it is a page uid, not a
+        // combined file identifier - and hands it to
+        // ResourceFactory::retrieveFileOrFolderObject(), which resolves a plain integer
+        // as a FILE uid. Best case that silently looks up an unrelated file, worst case
+        // it aborts the whole module with "A file needs to reside in a Storage"
+        // (RuntimeException 1381570997) when that file's storage cannot be resolved.
+        $module = $request->getAttribute('module');
+        if (!$module instanceof ModuleInterface || $module->getIdentifier() !== self::FILE_LIST_MODULE) {
+            return;
+        }
+
+        // Read both sources like FileListController does, so the button survives a POST.
+        $parsedBody = $request->getParsedBody();
+        $identifier = (is_array($parsedBody) ? ($parsedBody['id'] ?? null) : null)
+            ?? $request->getQueryParams()['id']
+            ?? null;
+        if (!is_scalar($identifier) || (string)$identifier === '') {
+            return;
+        }
+        $identifier = (string)$identifier;
+
+        // Second line of defence, independent of the module: a bare integer is never a
+        // folder but is accepted by retrieveFileOrFolderObject() as a file uid.
+        if (MathUtility::canBeInterpretedAsInteger($identifier)) {
             return;
         }
 
         $buttons = $event->getButtons();
-        foreach ($this->generateButtons((string)$identifier) as $buttonInfo) {
+        foreach ($this->generateButtons($identifier) as $buttonInfo) {
             $button = $this->componentFactory->createLinkButton();
             $button->setIcon($buttonInfo['icon']);
             $button->setTitle($buttonInfo['title']);
