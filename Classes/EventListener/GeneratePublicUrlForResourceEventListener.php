@@ -49,8 +49,19 @@ class GeneratePublicUrlForResourceEventListener
         // Rewrite public urls to the BE dump_file route in backend context only.
         // In frontend context no url is set here, so the TYPO3 core generates the
         // eID=dumpFile url whose access is checked by the ModifyFileDumpEventListener.
+        //
+        // The applicationType attribute is checked separately on purpose:
+        // ApplicationType::fromRequest() throws a RuntimeException (1606222812) when it
+        // is missing, and only the frontend, backend and install applications set it.
+        // CLI does not - so any command that puts a hand built request into
+        // $GLOBALS['TYPO3_REQUEST'] (a widespread trick to make typolink work in
+        // scheduler tasks and importers) would otherwise abort as soon as it touches a
+        // file in a non public storage. Returning early there matches what this
+        // listener did before the PSR-14 migration, when it was guarded by
+        // Environment::isCli().
         $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
         if (!$request instanceof ServerRequestInterface
+            || !is_int($request->getAttribute('applicationType'))
             || !ApplicationType::fromRequest($request)->isBackend()
         ) {
             return;
