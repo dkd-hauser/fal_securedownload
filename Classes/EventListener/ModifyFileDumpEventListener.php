@@ -92,7 +92,7 @@ class ModifyFileDumpEventListener
      * @see https://github.com/beechit/fal_securedownload/issues/37
      * @noinspection PhpUnused
      */
-    public function getFeUser(): FrontendUserAuthentication
+    public function getFeUser(): ?FrontendUserAuthentication
     {
         return $this->feUser;
     }
