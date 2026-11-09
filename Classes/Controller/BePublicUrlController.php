@@ -71,7 +71,7 @@ class BePublicUrlController extends AbstractApplication
             } else {
                 try {
                     /** @var ProcessedFile $file */
-                    $file = $this->processedFileRepository->findByUid($parameters['p']);
+                    $file = $this->processedFileRepository->findByUid($parameters['p'] ?? 0);
                 } catch (RuntimeException) {
                     return $this->responseFactory->createResponse(404);
                 }

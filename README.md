@@ -46,4 +46,4 @@ composer ci:tests:unit
 `composer ci:tests:unit` runs
 `.Build/bin/phpunit -c Build/phpunit/UnitTests.xml`. The same checks run on
 GitHub Actions for PHP 8.2 to 8.5 (see `.github/workflows/ci.yml`). PHPStan
-runs on level 5 with the configuration in `Build/phpstan/phpstan.neon`.
+runs on level 8 with the configuration in `Build/phpstan/phpstan.neon`.

@@ -87,6 +87,9 @@ class ItemProvider extends AbstractProvider
 
     protected function getAdditionalAttributes(string $itemName): array
     {
+        if (!$this->folder instanceof Folder) {
+            return [];
+        }
         /** @var Utility $utility */
         $utility = GeneralUtility::makeInstance(Utility::class);
         $folderRecord = $utility->getFolderRecord($this->folder);

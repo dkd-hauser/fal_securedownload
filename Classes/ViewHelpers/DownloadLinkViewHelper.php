@@ -106,7 +106,7 @@ class DownloadLinkViewHelper extends AbstractTagBasedViewHelper
      */
     protected function getUrlPrefix(): string
     {
-        if (!$this->renderingContext->hasAttribute(ServerRequestInterface::class)) {
+        if ($this->renderingContext === null || !$this->renderingContext->hasAttribute(ServerRequestInterface::class)) {
             return '';
         }
         $request = $this->renderingContext->getAttribute(ServerRequestInterface::class);

@@ -88,7 +88,7 @@ class LeafStateService implements SingletonInterface
      */
     protected function saveFolderState(FrontendUserAuthentication $user, array $folderState): void
     {
-        $user->setKey($user->user['uid'] ? 'user' : 'ses', 'LeafStateService', serialize($folderState));
+        $user->setKey(!empty($user->user['uid']) ? 'user' : 'ses', 'LeafStateService', serialize($folderState));
         $user->storeSessionData();
     }
 }

@@ -1,5 +1,5 @@
 parameters:
-  level: 5
+  level: 8
   paths:
     - ../../Classes
     - ../../Tests
@@ -8,6 +8,8 @@ parameters:
     contextApiGetAspectMapping:
       beechit.user: BeechIt\FalSecuredownload\Context\UserAspect
   ignoreErrors:
+    # value types of arrays (e.g. array<string, mixed>) are not documented
+    - identifier: missingType.iterableValue
     # ke_search and solrfal are optional (suggested) extensions and not installed for the analysis
     -
       message: '#Tpwd\\KeSearch\\#'

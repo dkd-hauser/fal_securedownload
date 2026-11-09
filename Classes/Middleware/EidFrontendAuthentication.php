@@ -32,7 +32,8 @@ class EidFrontendAuthentication implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $eID = $request->getParsedBody()['eID'] ?? $request->getQueryParams()['eID'] ?? null;
+        $parsedBody = (array)$request->getParsedBody();
+        $eID = $parsedBody['eID'] ?? $request->getQueryParams()['eID'] ?? null;
 
         if ($eID === null || !in_array($eID, ['dumpFile', 'FalSecuredownloadFileTreeState'])) {
             return $handler->handle($request);
@@ -41,7 +42,7 @@ class EidFrontendAuthentication implements MiddlewareInterface
         $frontendUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
 
         // List of page IDs where to look for frontend user records
-        $pid = $request->getParsedBody()['pid'] ?? $request->getQueryParams()['pid'] ?? 0;
+        $pid = $parsedBody['pid'] ?? $request->getQueryParams()['pid'] ?? 0;
         if ($pid) {
             $frontendUser->checkPid_value = implode(',', GeneralUtility::intExplode(',', $pid));
         }

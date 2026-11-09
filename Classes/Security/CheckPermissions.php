@@ -38,6 +38,7 @@ use TYPO3\CMS\Core\Resource\ResourceInterface;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 
 /**
  * Utility functions to check permissions
@@ -63,7 +64,9 @@ class CheckPermissions implements SingletonInterface
      */
     public function checkFileAccessForCurrentFeUser(FileInterface $file): bool
     {
-        $userFeGroups = !isset($GLOBALS['TYPO3_REQUEST']->getAttribute('frontend.user')->user) ? false : $GLOBALS['TYPO3_REQUEST']->getAttribute('frontend.user')->groupData['uid'];
+        /** @var FrontendUserAuthentication|null $frontendUser */
+        $frontendUser = $GLOBALS['TYPO3_REQUEST']->getAttribute('frontend.user');
+        $userFeGroups = !isset($frontendUser->user) ? false : $frontendUser->groupData['uid'];
         try {
             return $this->checkFileAccess($file, $userFeGroups);
         } catch (FolderDoesNotExistException) {
@@ -137,6 +140,7 @@ class CheckPermissions implements SingletonInterface
         }
 
         $customUserGroups = [];
+        /** @var AddCustomGroupsEvent $addCustomGroupsEvent */
         $addCustomGroupsEvent = $this->eventDispatcher->dispatch(new AddCustomGroupsEvent([$customUserGroups]));
         $eventArguments = $addCustomGroupsEvent->getCustomUserGroups();
         $customUserGroups = array_shift($eventArguments);

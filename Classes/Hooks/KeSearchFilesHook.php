@@ -45,7 +45,7 @@ class KeSearchFilesHook implements SingletonInterface
     /**
      * Check file permissions
      *
-     * @param $fileObject
+     * @param mixed $fileObject
      * @param string $content
      * @param \Tpwd\KeSearch\Indexer\Types\File $fileIndexerObject
      * @param string $feGroups
