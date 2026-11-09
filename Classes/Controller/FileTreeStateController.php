@@ -35,6 +35,7 @@ use TYPO3\CMS\Core\Context\Exception\AspectNotFoundException;
 use TYPO3\CMS\Core\Context\Exception\AspectPropertyNotFoundException;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\Response;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 
 class FileTreeStateController
 {
@@ -65,8 +66,11 @@ class FileTreeStateController
         }
 
         $open = (bool)($request->getParsedBody()['open'] ?? $request->getQueryParams()['open'] ?? false);
-        $userAspect = $this->context->getAspect('beechit.user');
-        $this->leafStateService->saveLeafStateForUser($userAspect->get('user'), $folder, $open);
+        $user = $this->context->getAspect('beechit.user')->get('user');
+        if (!$user instanceof FrontendUserAuthentication) {
+            return (new Response())->withStatus(403);
+        }
+        $this->leafStateService->saveLeafStateForUser($user, $folder, $open);
 
         return new JsonResponse([]);
     }

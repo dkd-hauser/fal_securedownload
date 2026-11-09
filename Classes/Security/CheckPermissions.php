@@ -234,14 +234,9 @@ class CheckPermissions implements SingletonInterface
                 // fetch folder permissions record
                 $folderRecord = $this->utilityService->getFolderRecord($folder);
 
-                // if record found check permissions
+                // the nearest folder with a permissions record defines the groups
                 if ($folderRecord) {
-                    if ($feGroups === []) {
-                        $feGroups = GeneralUtility::trimExplode(',', $folderRecord['fe_groups'], true);
-                    }
-                    if ($folderRecord['fe_groups']) {
-                        $feGroups = ArrayUtility::keepItemsInArray($feGroups, $folderRecord['fe_groups']);
-                    }
+                    $feGroups = GeneralUtility::trimExplode(',', $folderRecord['fe_groups'], true);
                     break;
                 }
             }

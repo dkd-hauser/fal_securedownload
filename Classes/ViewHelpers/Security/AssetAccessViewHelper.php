@@ -57,7 +57,7 @@ class AssetAccessViewHelper extends AbstractConditionViewHelper
     {
         /** @var Folder $folder */
         $folder = $arguments['folder'];
-        /** @var File $file */
+        /** @var File|null $file */
         $file = $arguments['file'];
 
         /** @var CheckPermissions $checkPermissionsService */

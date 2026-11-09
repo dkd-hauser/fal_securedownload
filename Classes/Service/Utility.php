@@ -31,7 +31,6 @@ use Doctrine\DBAL\Exception;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
-use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\FolderInterface;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -49,13 +48,15 @@ class Utility implements SingletonInterface
     /**
      * Get folder configuration record
      *
-     * @param Folder $folder
+     * @param FolderInterface $folder
      * @return array|false
      */
     public function getFolderRecord(FolderInterface $folder)
     {
-        if (!isset(self::$folderRecordCache[$folder->getCombinedIdentifier()])
-            || !array_key_exists($folder->getCombinedIdentifier(), self::$folderRecordCache)
+        // same as Folder::getCombinedIdentifier(), which FolderInterface does not provide
+        $cacheIdentifier = $folder->getStorage()->getUid() . ':' . $folder->getIdentifier();
+        if (!isset(self::$folderRecordCache[$cacheIdentifier])
+            || !array_key_exists($cacheIdentifier, self::$folderRecordCache)
         ) {
             $queryBuilder = $this->getQueryBuilder();
             try {
@@ -81,10 +82,10 @@ class Utility implements SingletonInterface
             }
 
             // cache results
-            self::$folderRecordCache[$folder->getCombinedIdentifier()] = $record;
+            self::$folderRecordCache[$cacheIdentifier] = $record;
         }
 
-        return self::$folderRecordCache[$folder->getCombinedIdentifier()];
+        return self::$folderRecordCache[$cacheIdentifier];
     }
 
     /**
