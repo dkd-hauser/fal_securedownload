@@ -28,4 +28,5 @@ fe_groups in the file module.
 
 ## Requirements
 
-- TYPO3 13 LTS
+- TYPO3 14.3 LTS
+- PHP 8.2 or higher
