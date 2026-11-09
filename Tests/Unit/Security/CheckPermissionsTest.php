@@ -282,4 +282,28 @@ final class CheckPermissionsTest extends UnitTestCase
 
         self::assertTrue($this->createSubject()->checkFileAccess($file, [1]));
     }
+
+    public static function getPermissionsDataProvider(): iterable
+    {
+        yield 'no folder record' => [[], '', ''];
+        yield 'groups of root folder' => [['/' => ['fe_groups' => '1,2']], '', '1,2'];
+        yield 'nearest folder record wins' => [['/' => ['fe_groups' => '1,2'], '/docs/' => ['fe_groups' => '3']], '', '3'];
+        yield 'empty nearest folder record wins' => [['/' => ['fe_groups' => '1'], '/docs/' => ['fe_groups' => '']], '', ''];
+        yield 'spaces in folder groups' => [['/' => ['fe_groups' => ' 1 , 2 ']], '', '1,2'];
+        yield 'file groups restrict folder groups' => [['/' => ['fe_groups' => '1,2,3']], '2,4', '2'];
+        yield 'file groups without folder record' => [[], '4', ''];
+    }
+
+    /**
+     * @param array<string, array{fe_groups: string}> $folderRecords
+     */
+    #[Test]
+    #[DataProvider('getPermissionsDataProvider')]
+    public function getPermissionsReturnsGroupsOfNearestFolderRecord(array $folderRecords, string $fileGroups, string $expected): void
+    {
+        $this->folderRecords = $folderRecords;
+        $file = $this->createFile($this->createFolder('/', '/docs/', '/docs/sub/'), $fileGroups);
+
+        self::assertSame($expected, $this->createSubject()->getPermissions($file));
+    }
 }
