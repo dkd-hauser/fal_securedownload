@@ -60,7 +60,7 @@ class AssetAccessViewHelper extends AbstractConditionViewHelper
         /** @var File $file */
         $file = $arguments['file'];
 
-        /** @var $checkPermissionsService CheckPermissions */
+        /** @var CheckPermissions $checkPermissionsService */
         $checkPermissionsService = GeneralUtility::makeInstance(CheckPermissions::class);
         $userFeGroups = self::getFeUserGroups();
         $access = false;

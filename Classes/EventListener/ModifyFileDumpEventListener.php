@@ -142,7 +142,7 @@ class ModifyFileDumpEventListener
                 'tstamp' => time(),
                 'crdate' => time(),
                 'feuser' => (int)$this->feUser->user['uid'],
-                'file' => (int)$this->originalFile->getUid(),
+                'file' => (int)$this->originalFile->getProperty('uid'),
             ];
 
             $this->connectionPool
@@ -289,7 +289,7 @@ class ModifyFileDumpEventListener
             return false;
         }
 
-        /** @var $checkPermissionsService CheckPermissions */
+        /** @var CheckPermissions $checkPermissionsService */
         $checkPermissionsService = GeneralUtility::makeInstance(CheckPermissions::class);
 
         if ($checkPermissionsService->checkBackendUserFileAccess($this->originalFile)) {

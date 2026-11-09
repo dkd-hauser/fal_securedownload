@@ -281,7 +281,8 @@ class CheckPermissions implements SingletonInterface
     /**
      * Get all folders in root line of given folder
      *
-     * @return Folder[]
+     * @return FolderInterface[]
+     * @throws FolderDoesNotExistException
      */
     public function getFolderRootLine(FolderInterface $folder)
     {
