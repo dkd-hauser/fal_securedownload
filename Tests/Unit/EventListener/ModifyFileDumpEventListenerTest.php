@@ -17,6 +17,7 @@ namespace BeechIt\FalSecuredownload\Tests\Unit\EventListener;
 
 use BeechIt\FalSecuredownload\Context\UserAspect;
 use BeechIt\FalSecuredownload\EventListener\ModifyFileDumpEventListener;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -94,5 +95,50 @@ final class ModifyFileDumpEventListenerTest extends UnitTestCase
         $this->context->setAspect('beechit.user', new UserAspect($frontendUser));
 
         self::assertFalse($this->isLoggedIn());
+    }
+
+    public static function getHttpRangeDataProvider(): iterable
+    {
+        yield 'no range header' => [null, [0, 99]];
+        yield 'only dash' => ['-', [0, 99]];
+        yield 'full range' => ['bytes=0-99', [0, 99]];
+        yield 'start and end' => ['bytes=10-19', [10, 19]];
+        yield 'end beyond file size' => ['bytes=10-500', [10, 99]];
+        yield 'open end' => ['bytes=90-', [90, 99]];
+        yield 'suffix length' => ['bytes=-10', [90, 99]];
+        yield 'suffix length larger than file' => ['bytes=-200', []];
+        yield 'start after end' => ['bytes=20-10', []];
+        yield 'start beyond file size' => ['bytes=100-', []];
+        yield 'neither start nor end' => ['bytes=-', []];
+        yield 'invalid unit' => ['items=0-10', []];
+        yield 'several ranges' => ['bytes=0-10,20-30', []];
+    }
+
+    /**
+     * @param array{}|array{int, int} $expected
+     */
+    #[Test]
+    #[DataProvider('getHttpRangeDataProvider')]
+    public function getHttpRange(?string $rangeHeader, array $expected): void
+    {
+        unset($_SERVER['HTTP_RANGE']);
+        if ($rangeHeader !== null) {
+            $_SERVER['HTTP_RANGE'] = $rangeHeader;
+        }
+        $subject = new class (
+            $this->createStub(EventDispatcherInterface::class),
+            $this->createStub(ConnectionPool::class),
+            $this->createStub(LinkService::class)
+        ) extends ModifyFileDumpEventListener {
+            /**
+             * @return array{}|array{int, int}
+             */
+            public function callGetHttpRange(int $fileSize): array
+            {
+                return $this->getHttpRange($fileSize);
+            }
+        };
+
+        self::assertSame($expected, $subject->callGetHttpRange(100));
     }
 }

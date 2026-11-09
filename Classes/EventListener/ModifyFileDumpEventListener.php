@@ -118,6 +118,7 @@ class ModifyFileDumpEventListener
         $loginRedirectUrl = $this->loginRedirectUrl;
         $noAccessRedirectUrl = $this->noAccessRedirectUrl;
 
+        /** @var BeforeRedirectsEvent $beforeRedirectsEvent */
         $beforeRedirectsEvent = $this->eventDispatcher->dispatch(new BeforeRedirectsEvent($loginRedirectUrl, $noAccessRedirectUrl, $file, $this));
         $loginRedirectUrl = $beforeRedirectsEvent->getLoginRedirectUrl();
         $noAccessRedirectUrl = $beforeRedirectsEvent->getNoAccessRedirectUrl();
@@ -141,7 +142,7 @@ class ModifyFileDumpEventListener
             $columns = [
                 'tstamp' => time(),
                 'crdate' => time(),
-                'feuser' => (int)$this->feUser->user['uid'],
+                'feuser' => (int)($this->feUser?->user['uid'] ?? 0),
                 'file' => (int)$this->originalFile->getProperty('uid'),
             ];
 
@@ -172,6 +173,7 @@ class ModifyFileDumpEventListener
      * @param FileInterface $file
      * @param bool $asDownload
      * @param bool $resumableDownload
+     * @return void
      */
     protected function dumpFileContents(FileInterface $file, bool $asDownload, bool $resumableDownload)
     {
@@ -230,11 +232,11 @@ class ModifyFileDumpEventListener
         fseek($filePointer, $begin);
         $dumpedSize = 0;
         while (!feof($filePointer) && $dumpedSize < $dumpSize) {
-            $partSize = 1024 * 8;
-            if ($partSize > $dumpSize - $dumpedSize) {
-                $partSize = $dumpSize - $dumpedSize;
-            }
+            $partSize = max(1, min(1024 * 8, (int)($dumpSize - $dumpedSize)));
             $buffer = @fread($filePointer, $partSize);
+            if ($buffer === false) {
+                break;
+            }
             $dumpedSize += strlen($buffer);
             print $buffer;
             flush();
@@ -271,8 +273,8 @@ class ModifyFileDumpEventListener
     protected function isLoggedIn(): bool
     {
         try {
-            $this->initializeUserAuthentication();
-            return is_array($this->feUser->user) && $this->feUser->user['uid'];
+            $feUser = $this->getInitializedFeUser();
+            return is_array($feUser->user) && !empty($feUser->user['uid']);
         } catch (AspectNotFoundException|AspectPropertyNotFoundException) {
             return false;
         }
@@ -284,7 +286,7 @@ class ModifyFileDumpEventListener
     protected function checkPermissions(): bool
     {
         try {
-            $this->initializeUserAuthentication();
+            $feUser = $this->getInitializedFeUser();
         } catch (AspectNotFoundException|AspectPropertyNotFoundException) {
             return false;
         }
@@ -305,9 +307,9 @@ class ModifyFileDumpEventListener
         // 2. If a user has any groups, regardless of login status, those groups will
         //    be used for the permission check.
         // Variant 2 is implemented here.
-        $userFeGroups = !$this->isLoggedIn() && $this->feUser->groupData['uid'] === []
+        $userFeGroups = !$this->isLoggedIn() && $feUser->groupData['uid'] === []
             ? false
-            : $this->feUser->groupData['uid'];
+            : $feUser->groupData['uid'];
 
         try {
             return $checkPermissionsService->checkFileAccess($this->originalFile, $userFeGroups);
@@ -317,7 +319,24 @@ class ModifyFileDumpEventListener
     }
 
     /**
+     * Initialize feUser and return it
+     *
+     * @throws AspectNotFoundException
+     * @throws AspectPropertyNotFoundException
+     */
+    private function getInitializedFeUser(): FrontendUserAuthentication
+    {
+        $this->initializeUserAuthentication();
+        if ($this->feUser === null) {
+            throw new AspectPropertyNotFoundException('No frontend user initialized.', 1794240477);
+        }
+        return $this->feUser;
+    }
+
+    /**
      * Initialize feUser
+     *
+     * @return void
      * @throws AspectNotFoundException
      * @throws AspectPropertyNotFoundException
      */
@@ -349,6 +368,8 @@ class ModifyFileDumpEventListener
 
     /**
      * Redirect to url
+     *
+     * @return never
      */
     protected function redirectToUrl(string $url)
     {
@@ -413,7 +434,7 @@ class ModifyFileDumpEventListener
      * Determines the HTTP range given in the request
      *
      * @param int $fileSize the size of the file
-     * @return array the range (begin, end), or empty array if the range request is invalid.
+     * @return array{}|array{int, int} the range (begin, end), or empty array if the range request is invalid.
      */
     protected function getHttpRange(int $fileSize): array
     {
@@ -424,22 +445,22 @@ class ModifyFileDumpEventListener
         if (!preg_match('/^bytes=(\d*)-(\d*)$/', (string) $range, $matches)) {
             return [];
         }
+        if ($matches[1] === '' && $matches[2] === '') {
+            return [];
+        }
         if ($matches[1] === '') {
-            $start = $fileSize - $matches[2];
+            $start = $fileSize - (int)$matches[2];
             $end = $fileSize - 1;
         } elseif ($matches[2] !== '') {
-            $start = $matches[1];
-            $end = $matches[2];
-            if ($end >= $fileSize) {
-                $end = $fileSize - 1;
-            }
+            $start = (int)$matches[1];
+            $end = min((int)$matches[2], $fileSize - 1);
         } else {
-            $start = $matches[1];
+            $start = (int)$matches[1];
             $end = $fileSize - 1;
         }
         if ($start < 0 || $start > $end) {
             return [];
         }
-        return [(int)$start, (int)$end];
+        return [$start, $end];
     }
 }
