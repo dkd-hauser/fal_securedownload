@@ -326,7 +326,14 @@ class ModifyFileDumpEventListener
         if ($this->feUser === null) {
             /** @var UserAspect $userAspect */
             $userAspect = $this->context->getAspect('beechit.user');
-            $this->feUser = $userAspect->get('user');
+            $user = $userAspect->get('user');
+            if (!$user instanceof FrontendUserAuthentication) {
+                throw new AspectPropertyNotFoundException(
+                    'Aspect "beechit.user" does not contain a frontend user.',
+                    1794240476
+                );
+            }
+            $this->feUser = $user;
             $this->feUser->fetchGroupData($this->event->getRequest());
         }
     }
