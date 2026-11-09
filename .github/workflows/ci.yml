@@ -44,5 +44,8 @@ jobs:
       - name: Lint PHP files
         run: composer ci:php:lint
 
+      - name: PHPStan
+        run: composer ci:php:stan
+
       - name: Unit tests
         run: composer ci:tests:unit

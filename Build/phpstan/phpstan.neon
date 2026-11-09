@@ -1,0 +1,17 @@
+parameters:
+  level: 2
+  paths:
+    - ../../Classes
+    - ../../Tests
+  tmpDir: ../../.Build/.cache/phpstan
+  typo3:
+    contextApiGetAspectMapping:
+      beechit.user: BeechIt\FalSecuredownload\Context\UserAspect
+  ignoreErrors:
+    # ke_search and solrfal are optional (suggested) extensions and not installed for the analysis
+    -
+      message: '#Tpwd\\KeSearch\\#'
+      path: ../../Classes/Hooks/KeSearchFilesHook.php
+    -
+      message: '#ApacheSolrForTypo3\\Solrfal\\#'
+      path: ../../Classes/EventListener/AfterFileMetaDataHasBeenRetrievedEventListener.php

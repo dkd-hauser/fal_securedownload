@@ -43,7 +43,11 @@
         "typo3/cms-frontend": "^14.3"
     },
     "require-dev": {
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^11.5 || ^12.4",
+        "saschaegerer/phpstan-typo3": "^3.0",
         "typo3/testing-framework": "^9.7"
     },
     "autoload": {
@@ -67,6 +71,7 @@
     },
     "config": {
         "allow-plugins": {
+            "phpstan/extension-installer": true,
             "typo3/class-alias-loader": true,
             "typo3/cms-composer-installers": true
         },
@@ -77,6 +82,7 @@
     },
     "scripts": {
         "ci:php:lint": "find Classes Configuration Tests *.php -name '*.php' -print0 | xargs -0 -n1 -P4 php -l -n",
+        "ci:php:stan": "phpstan analyse -c Build/phpstan/phpstan.neon --memory-limit=1G --no-progress",
         "ci:tests:unit": "phpunit -c Build/phpunit/UnitTests.xml"
     }
 }

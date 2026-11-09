@@ -39,9 +39,11 @@ The unit tests use the TYPO3 testing framework. Dependencies are installed to
 ```bash
 composer install
 composer ci:php:lint
+composer ci:php:stan
 composer ci:tests:unit
 ```
 
 `composer ci:tests:unit` runs
 `.Build/bin/phpunit -c Build/phpunit/UnitTests.xml`. The same checks run on
-GitHub Actions for PHP 8.2 to 8.5 (see `.github/workflows/ci.yml`).
+GitHub Actions for PHP 8.2 to 8.5 (see `.github/workflows/ci.yml`). PHPStan
+runs on level 2 with the configuration in `Build/phpstan/phpstan.neon`.
