@@ -42,9 +42,18 @@
         "typo3/cms-backend": "^14.3",
         "typo3/cms-frontend": "^14.3"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5 || ^12.4",
+        "typo3/testing-framework": "^9.7"
+    },
     "autoload": {
         "psr-4": {
             "BeechIt\\FalSecuredownload\\": "Classes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BeechIt\\FalSecuredownload\\Tests\\": "Tests/"
         }
     },
     "extra": {
@@ -52,10 +61,22 @@
             "dev-master": "6.x-dev"
         },
         "typo3/cms": {
-            "extension-key": "fal_securedownload"
+            "extension-key": "fal_securedownload",
+            "web-dir": ".Build/public"
         }
     },
     "config": {
-        "lock": false
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        },
+        "bin-dir": ".Build/bin",
+        "lock": false,
+        "sort-packages": true,
+        "vendor-dir": ".Build/vendor"
+    },
+    "scripts": {
+        "ci:php:lint": "find Classes Configuration Tests *.php -name '*.php' -print0 | xargs -0 -n1 -P4 php -l -n",
+        "ci:tests:unit": "phpunit -c Build/phpunit/UnitTests.xml"
     }
 }
