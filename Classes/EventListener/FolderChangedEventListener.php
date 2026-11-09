@@ -75,6 +75,10 @@ class FolderChangedEventListener implements SingletonInterface
     {
         $folder = $event->getFolder();
         $newFolder = $event->getTargetFolder();
+        // The event allows a missing or non-Folder target, there is nothing to update then
+        if (!$newFolder instanceof Folder) {
+            return;
+        }
         $this->updateFolderPermissions($folder, $newFolder);
     }
 
